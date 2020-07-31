@@ -8,6 +8,8 @@ import pathlib
 import websockets
 import concurrent.futures
 import logging
+import wave
+from datetime import datetime
 from vosk import Model, KaldiRecognizer
 
 # Uncomment for better memory usage
@@ -24,7 +26,7 @@ from vosk import Model, KaldiRecognizer
 vosk_interface = os.environ.get('VOSK_SERVER_INTERFACE', '0.0.0.0')
 vosk_port = int(os.environ.get('VOSK_SERVER_PORT', 2700))
 vosk_model_path = os.environ.get('VOSK_MODEL_PATH', 'model')
-vosk_sample_rate = float(os.environ.get('VOSK_SAMPLE_RATE', 8000))
+vosk_sample_rate = float(os.environ.get('VOSK_SAMPLE_RATE', 16000))
 
 if len(sys.argv) > 1:
    vosk_model_path = sys.argv[1]
@@ -54,10 +56,29 @@ async def recognize(websocket, path):
     rec = None
     word_list = None
     sample_rate = vosk_sample_rate
+    
+    file_base = 'data_dump/'+websocket.remote_address[0].replace('.','_')
+    
+    now = datetime.now()
+    timestamp = str(datetime.timestamp(now))
 
+    wav_dump = wave.open(file_base+timestamp+'.wav', 'wb') 
+    
+    wav_dump.setnchannels(1)
+    #Set the number of channels.
+
+    wav_dump.setsampwidth(2)
+    #Set the sample width to n bytes.capitalize
+    
+    wav_dump.setframerate(16000)
+
+    result_dump = open(file_base+'-'+timestamp+'.txt', 'w') 
+    
     while True:
 
         message = await websocket.recv()
+        if not isinstance(message, str):
+            wav_dump.writeframesraw(message)
 
         # Load configuration if provided
         if isinstance(message, str) and 'config' in message:
@@ -77,7 +98,13 @@ async def recognize(websocket, path):
 
         response, stop = await loop.run_in_executor(pool, process_chunk, rec, message)
         await websocket.send(response)
+        jobj = json.loads(response)
+        if "text" in jobj:
+            result_dump.write(jobj['text'])
         if stop: break
+
+if not os.path.exists('data_dump'):
+    os.mkdir('data_dump')
 
 start_server = websockets.serve(
     recognize, vosk_interface, vosk_port)

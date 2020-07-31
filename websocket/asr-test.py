@@ -20,4 +20,4 @@ async def hello(uri):
         print (await websocket.recv())
 
 asyncio.get_event_loop().run_until_complete(
-    hello('ws://localhost:2701'))
+    hello('ws://192.168.105.95:2702'))

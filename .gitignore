@@ -2,4 +2,9 @@ __pycache__
 *.pyc
 *.tar.gz
 *pb2*.py
+env/
 model
+docker/model_english.tgz
+docker/model_attendance.tgz
+client-samples/angular-demo/node_modules/
+

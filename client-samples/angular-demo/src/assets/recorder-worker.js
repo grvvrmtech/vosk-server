@@ -180,7 +180,7 @@ this.onmessage = function(e) {
 
 function init(config) {
   sampleRate = config.sampleRate;
-  resampler = new Resampler(sampleRate, 8000, 1, 50 * 1024, false);
+  resampler = new Resampler(sampleRate, 16000, 1, 50 * 1024, false);
 }
 
 function record(inputBuffer) {
